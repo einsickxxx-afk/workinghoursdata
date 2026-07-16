@@ -2137,7 +2137,7 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
       const color = colorFor(i.avg);
       return `<div class="hbar-row">
          <div class="hbar-name">${i.team}</div>
-         <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${52/axisMax*100).toFixed(2)}%"></div></div>
+         <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
          <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
       </div>`;
      }).join('');
