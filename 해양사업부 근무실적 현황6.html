@@ -1760,7 +1760,7 @@ function exportStandalone(){
   URL.revokeObjectURL(url);
 }
 
-function exportTeamCSV(){
+function exportTeamHTML(){
    if(RAW_ROWS.length===0){ alert('먼저 CSV를 불러와 주세요.'); return; }
    const site = document.getElementById('siteFilter').value;
    const team = document.getElementById('teamFilter').value;
@@ -1782,11 +1782,30 @@ function exportTeamCSV(){
    rows.forEach(r => { lines.push(header.map(h => escCell(r[h])).join(',')); });
    const csvText = '\uFEFF' + lines.join('\r\n');
 
-   const blob = new Blob([csvText], {type: 'text/csv;charset=utf-8' });
+   // 완성 파일로 저장(exportStandalone)과 동일한 방식으로 현재 화면 전체를 복제해 
+   // EMBEDDED_SAMPLE_CSV 부분만 필터링된 데이터로 교체합니다. 
+   const esc = csvTest.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$\{/g,'\\${');
+   let html = '<!DOCTYPE html>\n' +document.documentElement.outerHTML;
+
+   const marker = 'const EMBEDDED_SAMPLE_CSV = `';
+   const start = html.indexOf(marker);
+   if(start === -1){ alert('내보내기용 템플릿을 찾지 못했습니다.'); return; }
+   const closeIdx = html.indexOf('`;', start + marker.length);
+   html = html.slice(0, start) + marker + esc + html.slice(closeIdx);
+
+   const today = new Date();
+   const dateLabel = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+   const filterLabel = team !== 'all' ? team : site;
+   html = html.replace(
+      /샘플 데이터 표시 중 \(내장\)[^']*실제 데이터는 CSV 불러오기로 교체하세요/,
+      `${filterLabel} 필터 데이터 . 반영일: ${dateLabel}`
+   );
+   
+   const blob = new Blob([html], {type: 'text/html;charset=utf-8' });
    const url = URL.createObjectURL(blob);
    const a = document.createElement('a');
    a.href = url;
-   a.download = `${team !== 'all' ? team : site}_근무시간.csv`;
+   a.download = `${filterLabel}_근무실적_${dateLabel}.html`;
    document.body.appendChild(a);
    a.click();
    document.body.removeChild(a);
@@ -1975,11 +1994,11 @@ function render(){
    
   renderKpis(latestRows, weekKeys, rows, orgLatestRows);
   renderTrend(rows, weekKeys);
-  renderDeptRanking(latestRows);
+  renderDeptRanking(orgLatestRows, team);
   renderBuckets(latestRows);
   renderWeekday(latestRows);
   renderWeekend(latestRows);
-  renderSiteRanking(latestRows);
+  renderSiteRanking(orgLatestRows, site);
   renderRiskTable(rows, weekKeys, latest);
 }
 
@@ -2075,7 +2094,7 @@ function renderTrend(rows, weekKeysFull){
 }
 
 /* ===================== 부서별 순위 ===================== */
-function renderDeptRanking(latestRows){
+function renderDeptRanking(latestRows, activeTeam){
   const byTeam = {};
   latestRows.forEach(r => {
     const t = r['부서명']; if(!t) return;
@@ -2090,7 +2109,8 @@ function renderDeptRanking(latestRows){
   const el = document.getElementById('deptRanking');
   el.innerHTML = items.map(i => {
     const pct = (i.avg/axisMax*100).toFixed(1);
-    const color = i.avg>=52 ? 'var(--coral)' : i.avg>=48 ? 'var(--steel)' : i.avg>=44 ? 'var(--skyblue)' : 'var(--pale)';
+    const isSelected = activeTeam && activeTeam !== 'all' && i.team === activeTeam;
+    const color = isSelected ? 'var(--coral)' : 'var(--navy)';
     return `<div class="hbar-row">
       <div class="hbar-name">${i.team}</div>
       <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
@@ -2216,7 +2236,7 @@ function renderWeekend(latestRows){
 }
 
 /* ===================== 사업장별 순위 ===================== */
-function renderSiteRanking(latestRows){
+function renderSiteRanking(latestRows, activeSite){
   const bySite = {};
   latestRows.forEach(r => {
     const s = r['사업장']; if(!s) return;
@@ -2231,7 +2251,8 @@ function renderSiteRanking(latestRows){
   const el = document.getElementById('siteRanking');
   el.innerHTML = items.map(i => {
     const pct = (i.avg/axisMax*100).toFixed(1);
-    const color = i.avg>=52 ? 'var(--coral)' : i.avg>=48 ? 'var(--steel)' : i.avg>=44 ? 'var(--skyblue)' : 'var(--pale)';
+    const isSelected = activeSite && activeSite !== 'all' && i.site === activeSite;
+    const color = isSelected ? 'var(--coral)' : 'var(--navy)';
     return `<div class="hbar-row">
       <div class="hbar-name">${i.site}</div>
       <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
@@ -2326,7 +2347,7 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 });
 
 document.getElementById('exportBtn').addEventListener('click', exportStandalone);
-document.getElementById('exportTeamCsvBtn').addEventListener('click', exportTeamCSV);
+document.getElementById('exportTeamCsvBtn').addEventListener('click', exportTeamHTML);
 
 /* ===================== 시작 ===================== */
 init();
