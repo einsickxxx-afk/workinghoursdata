@@ -236,6 +236,7 @@ tbody tr:last-child td{ border-bottom:none; }
       <button class="load-btn" id="loadBtn">CSV 불러오기</button>
       <input type="file" id="fileInput" accept=".csv">
       <button class="load-btn" id="exportBtn" style="background:var(--coral);">완성 파일로 저장</button>
+      <button class="load-btn" id="exportTeamCsvBtn" style="background:var(--steel);">현재 선택 필터 내용 저장</button>
       <button class="icon-btn" id="settingsBtn" title="색상·폰트 설정">⚙</button>
     </div>
   </div>
@@ -1759,6 +1760,39 @@ function exportStandalone(){
   URL.revokeObjectURL(url);
 }
 
+function exportTeamCSV(){
+   if(RAW_ROWS.length===0){ alert('먼저 CSV를 불러와 주세요.'); return; }
+   const site = document.getElementById('siteFilter').value;
+   const team = document.getElementById('teamFilter').value;
+   if(site === 'all' && team ==='all'){
+      alert('사업장 또는 부서를 하나 선택한 뒤 저장해 주세요. (전체 상태는 원본 CSV를 그대로 쓰시면 됩니다)');
+      return;
+   }
+   let rows = RAW_ROWS.filter(r =>r['구분'] !== EXCLUDE_WORKTYPE && !EXEC_RANKS.includes(r['직급']));
+   if(site !== 'all') rows = rows.filter(r => r['사업장'] === site);
+   if(team !== 'all') rows = rows.filter(r => r['부서명'] === team);
+   if(rows.length === 0){ alert('선택한 조건에 해당하는 데이터가 없습니다.'); return; }
+
+   const header = ['No.','구분','년월','주차','사번','이름','직급','사업장','부서명','월','화','수','목','금','토','일','주확정근무시간','평일확정근무시간','법정휴게시간','비업무_기타','비업무','비업무(중식)'];
+   const escCell = (v) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+   };
+   const lines = [header.join(',')];
+   rows.forEach(r => { lines.push(header.map(h => escCell(r[h])).join(',')); });
+   const csvText = '\uFEFF' + lines.join('\r\n');
+
+   const blob = new Blob([csvText], {type: 'text/csv;charset=utf-8' });
+   const url = URL.createObjectURL(blob);
+   const a = document.createElement('a');
+   a.href = url;
+   a.download = `${team !== 'all' ? team : site}_근무시간.csv`;
+   document.body.appendChild(a);
+   a.click();
+   document.body.removeChild(a);
+   URL.revokeObjectURL(url);
+}
+   
 /* ===================== 자체 CSV 파서 (외부 라이브러리 불필요) ===================== */
 function parseCSV(text){
   text = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
@@ -1932,7 +1966,14 @@ function render(){
   const latest = weekKeys[weekKeys.length-1];
   const latestRows = rows.filter(r => r._week === latest);
 
-  renderKpis(latestRows, weekKeys, rows);
+// 전사업부(필터 미적용) 비교용 데이터
+   let orgRows = RAW_ROWS.filter(r =>
+      r['구분'] !== EXCLUDE_WORKTYPE && !EXEC_RANKS.includes(r['직급'])
+   );
+   orgRows.forEach(r => { r._week = weekKey(r); r._Q = numH(r['주확정근무시간']); });
+   const orgLatestRows = orgRows.filter(r => r._week === latest);
+   
+  renderKpis(latestRows, weekKeys, rows, orgLatestRows);
   renderTrend(rows, weekKeys);
   renderDeptRanking(latestRows);
   renderBuckets(latestRows);
@@ -1943,7 +1984,7 @@ function render(){
 }
 
 /* ===================== KPI ===================== */
-function renderKpis(latestRows, weekKeys, allRows){
+function renderKpis(latestRows, weekKeys, allRows,orgLatestRows){
   const total = latestRows.length;
   const over = latestRows.filter(r => r._Q >= 52).length;
   const ratio = total ? (over/total*100) : 0;
@@ -1960,6 +2001,18 @@ function renderKpis(latestRows, weekKeys, allRows){
     const diff = ratio - prevRatio;
     deltaTxt = `전주 대비 ${diff>=0?'+':''}${fmt1(diff)}%p`;
   }
+
+  const site = document.getElementById('siteFilter').value;
+  const team = document.getElementById('teamFilter').value;
+  const isFilterted = site !== 'all' || team !== 'all';
+
+  if(isFiltered && orgLatestRows && orgLatestRows.length){
+     const orgTotal = orgLatestRows.length;
+     const orgOver = orgLatestRows.filter(r => r._Q >= 52).length;
+     const orgRatio = orgTotal ? (orgOver/orgTotal*100) : 0;
+     deltaTxt += `.사업부 전체 ${fmt1(orgRatio)}%`;
+  }
+   
   document.getElementById('kpiCountSub').innerHTML = deltaTxt;
 
   document.getElementById('donut').style.background =
@@ -2273,6 +2326,7 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 });
 
 document.getElementById('exportBtn').addEventListener('click', exportStandalone);
+document.getElementById('exportTeamCsvBtn').addEventListener('click', exportTeamCSV);
 
 /* ===================== 시작 ===================== */
 init();
