@@ -2260,7 +2260,32 @@ function renderWeekend(latestRows){
 }
 
 /* ===================== 사업장별 순위 ===================== */
-function renderSiteRanking(latestRows, activeSite){
+function renderSiteRanking(latestRows, orgLatestRows, activeSite){
+  const colorFor = (v) => v>=52 ? 'var(--coral)' : v>=48 ? 'var(--steel)' : v>=44 ? 'var(--skyblue)' : 'var(--pale)';
+
+  // 특정 사업장을 선택한 경우: 선택 사업장 평균 vs 사업부 전체 평균, 2개 막대만 비교
+  if(activeSite && activeSite !== 'all'){
+    const siteAvg = latestRows.length ? latestRows.reduce((s,r)=>s+r._Q,0)/latestRows.length : 0;
+    const orgAvg = orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0;
+    const axisMax = Math.max(56, siteAvg*1.05, orgAvg*1.05);
+    const items = [
+      { label: activeSite, avg: siteAvg },
+      { label: '사업부 전체 평균', avg: orgAvg }
+    ];
+    const el = document.getElementById('siteRanking');
+    el.innerHTML = items.map(i => {
+      const pct = (i.avg/axisMax*100).toFixed(1);
+      const color = colorFor(i.avg);
+      return `<div class="hbar-row">
+        <div class="hbar-name">${i.label}</div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
+        <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // 사업장 필터가 '전체'인 경우: 기존과 동일하게 전체 사업장 랭킹 표시
   const bySite = {};
   latestRows.forEach(r => {
     const s = r['사업장']; if(!s) return;
@@ -2275,8 +2300,7 @@ function renderSiteRanking(latestRows, activeSite){
   const el = document.getElementById('siteRanking');
   el.innerHTML = items.map(i => {
     const pct = (i.avg/axisMax*100).toFixed(1);
-    const isSelected = activeSite && activeSite !== 'all' && i.site === activeSite;
-    const color = isSelected ? 'var(--coral)' : 'var(--navy)';
+    const color = colorFor(i.avg);
     return `<div class="hbar-row">
       <div class="hbar-name">${i.site}</div>
       <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
