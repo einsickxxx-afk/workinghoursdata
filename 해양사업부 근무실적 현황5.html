@@ -1751,7 +1751,7 @@ function exportStandalone(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `근무시간준수리포트_${dateLabel}.html`;
+  a.download = `해양사업부 근무실적 현황_${dateLabel}.html`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
