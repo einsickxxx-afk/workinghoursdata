@@ -174,6 +174,17 @@ tbody tr:last-child td{ border-bottom:none; }
 .tag.w3{ background:#FCEFDD; color:#C97A2B; }
 .tag.w2{ background:#EEF3F7; color:var(--steel); }
 
+.risk-table-wrap{
+   max-height:420px;
+   overflow-y:auto;
+}
+.risk-table-wrap thead th{
+   position:sticky;
+   top:0;
+   background:var(--card-bg);
+   z-index:1;
+}
+
 .footer-note{ margin-top:16px; font-size:11px; color:var(--muted); font-weight:600; }
 
 .error-banner{
@@ -326,6 +337,7 @@ tbody tr:last-child td{ border-bottom:none; }
       <h2>위험군 상세 (연속 52시간 근무자)</h2>
       <span class="panel-note">2주 이상 연속 52시간</span>
     </div>
+    <div class="risk-table-wrap">
     <table>
       <thead><tr><th>이름</th><th>부서</th><th>직급</th><th>연속 52시간</th><th>이번 주 근무시간</th></tr></thead>
       <tbody id="riskTableBody"></tbody>
@@ -2196,7 +2208,7 @@ function renderRiskTable(rows, weekKeys, latest){
 
   const tagClass = (n) => n>=4 ? 'w4' : n>=3 ? 'w3' : 'w2';
   const tbody = document.getElementById('riskTableBody');
-  tbody.innerHTML = risk.slice(0,20).map(r => `
+  tbody.innerHTML = risk.map(r => `
     <tr><td>${r.name}</td><td>${r.team}</td><td>${r.rank}</td>
       <td><span class="tag ${tagClass(r.streak)}">${r.streak}주</span></td>
       <td>${fmt1(r.latestQ||0)}</td></tr>
