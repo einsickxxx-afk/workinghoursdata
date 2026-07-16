@@ -2102,7 +2102,7 @@ function renderBuckets(latestRows){
   const tooltip = document.getElementById('bucketTooltip');
   document.querySelectorAll('#bucketPie path').forEach(path => {
      const idx = +path.dataset.idx;
-     path. addEventListener('click', (e) => {
+     path.addEventListener('click', (e) => {
         e.stopPropagation();
         const alreadyOpen = tooltip.style.display === 'block' && tooltip.dataset.idx === String(idx);
         if(alreadyOpen){
@@ -2115,8 +2115,9 @@ function renderBuckets(latestRows){
         tooltip.style.left = (e.clientX + 16) + 'px';
         tooltip.style.top = (e.clientY + 16) + 'px';
      });
-     path.addEventListener('click', (e) => e.stopPropagation());
-     document.addEventListener('clilck', () => { tooltip.style.display = 'none'; })
+  });
+  tooltip.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => { tooltip.style.display = 'none'; });
 }
    
 /* ===================== 요일별 편차 ===================== */
