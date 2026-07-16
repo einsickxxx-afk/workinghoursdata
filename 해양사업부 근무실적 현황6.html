@@ -1784,7 +1784,7 @@ function exportTeamHTML(){
 
    // 완성 파일로 저장(exportStandalone)과 동일한 방식으로 현재 화면 전체를 복제해 
    // EMBEDDED_SAMPLE_CSV 부분만 필터링된 데이터로 교체합니다. 
-   const esc = csvTest.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$\{/g,'\\${');
+   const esc = csvText.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$\{/g,'\\${');
    let html = '<!DOCTYPE html>\n' +document.documentElement.outerHTML;
 
    const marker = 'const EMBEDDED_SAMPLE_CSV = `';
@@ -1798,7 +1798,7 @@ function exportTeamHTML(){
    const filterLabel = team !== 'all' ? team : site;
    html = html.replace(
       /샘플 데이터 표시 중 \(내장\)[^']*실제 데이터는 CSV 불러오기로 교체하세요/,
-      `${filterLabel} 필터 데이터 . 반영일: ${dateLabel}`
+      `${filterLabel} 필터 데이터 · 반영일: ${dateLabel}`
    );
    
    const blob = new Blob([html], {type: 'text/html;charset=utf-8' });
@@ -2122,7 +2122,7 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
    // 팀 필터가 '전체'인 경우: 기존과 동일하게 전체 부서 랭킹 표시
    const byTeam = {};
    latestRows.forEach(r => {
-      const t = r['qntjaud']; if(!t) return;
+      const t = r['부서명']; if(!t) return;
       if(!byTeam[t]) byTeam[t] = [];
       byTeam[t].push(r._Q);
    });
@@ -2133,12 +2133,12 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
    const axisMax = Math.max(56, ...items.map(i=>i.avg*1.05));
    const el = document.getElementById('deptRanking');
    el.innerHTML = items.map(i => {
-      const pct = (i.avg/axisMax*100).toFIxed(1);
+      const pct = (i.avg/axisMax*100).toFixed(1);
       const color = colorFor(i.avg);
       return `<div class="hbar-row">
          <div class="hbar-name">${i.team}</div>
-         <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"</div><div class="ceiling-tick" style="left:${52/axisMax*100).toFixed(2)}%"</div></div>
-         <span class="hbar-val"style="color:${color}">${fmt1(i.avg)}</span>
+         <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${52/axisMax*100).toFixed(2)}%"></div></div>
+         <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
       </div>`;
      }).join('');
    } 
