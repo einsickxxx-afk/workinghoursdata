@@ -2004,13 +2004,13 @@ function renderKpis(latestRows, weekKeys, allRows,orgLatestRows){
 
   const site = document.getElementById('siteFilter').value;
   const team = document.getElementById('teamFilter').value;
-  const isFilterted = site !== 'all' || team !== 'all';
+  const isFiltered = site !== 'all' || team !== 'all';
 
   if(isFiltered && orgLatestRows && orgLatestRows.length){
      const orgTotal = orgLatestRows.length;
      const orgOver = orgLatestRows.filter(r => r._Q >= 52).length;
      const orgRatio = orgTotal ? (orgOver/orgTotal*100) : 0;
-     deltaTxt += `.사업부 전체 ${fmt1(orgRatio)}%`;
+     deltaTxt += `. 사업부 전체 ${fmt1(orgRatio)}%`;
   }
    
   document.getElementById('kpiCountSub').innerHTML = deltaTxt;
