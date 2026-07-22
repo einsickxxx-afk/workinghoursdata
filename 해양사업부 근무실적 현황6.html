@@ -289,7 +289,7 @@ tbody tr:last-child td{ border-bottom:none; }
     <div class="card">
       <div class="panel-head">
         <h2>부서별 평균 주간 확정근무시간</h2>
-        <span class="legend-dash"><span class="d"></span> 52시간</span>
+        <span class="legend-dash"><span class="d"></span> 사업부 전체 평균</span>
       </div>
       <div id="deptRanking"></div>
     </div>
@@ -309,7 +309,7 @@ tbody tr:last-child td{ border-bottom:none; }
     <div class="card card-center">
       <div class="panel-head">
         <h2>사업장별 평균 주간 확정근무시간</h2>
-        <span class="legend-dash"><span class="d"></span> 52시간</span>
+        <span class="legend-dash"><span class="d"></span> 사업부 전체 평균</span>
       </div>
       <div id="siteRanking" class="center-fill"></div>
     </div>
@@ -2112,7 +2112,7 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
         const color = colorFor(i.avg);
         return `<div class="hbar-row">
            <div class="hbar-name">${i.label}</div>
-           <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100). toFixed(2)}%"></div></div>
+           <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(orgAvg/axisMax*100). toFixed(2)}%"></div></div>
            <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
         </div>`;
      }).join('');
@@ -2130,14 +2130,15 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
       team, avg: arr.reduce((a,b)=>a+b,0)/arr.length
    })).sort((a,b)=>b.avg-a.avg);
 
-   const axisMax = Math.max(56, ...items.map(i=>i.avg*1.05));
+   const orgAvg = orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0;
+   const axisMax = Math.max(56, orgAvg*1.05, ...items.map(i=>i.avg*1.05));
    const el = document.getElementById('deptRanking');
    el.innerHTML = items.map(i => {
       const pct = (i.avg/axisMax*100).toFixed(1);
       const color = colorFor(i.avg);
       return `<div class="hbar-row">
          <div class="hbar-name">${i.team}</div>
-         <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
+         <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(orgAvg/axisMax*100).toFixed(2)}%"></div></div>
          <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
       </div>`;
      }).join('');
@@ -2279,7 +2280,7 @@ function renderSiteRanking(latestRows, orgLatestRows, activeSite){
       const color = colorFor(i.avg);
       return `<div class="hbar-row">
         <div class="hbar-name">${i.label}</div>
-        <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(orgAvg/axisMax*100).toFixed(2)}%"></div></div>
         <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
       </div>`;
     }).join('');
@@ -2297,14 +2298,15 @@ function renderSiteRanking(latestRows, orgLatestRows, activeSite){
     site, avg: arr.reduce((a,b)=>a+b,0)/arr.length
   })).sort((a,b)=>b.avg-a.avg);
 
-  const axisMax = Math.max(56, ...items.map(i=>i.avg*1.05));
+   const orgAvg = orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0;
+   const axisMax = Math.max(56, orgAvg*1.05, ...items.map(i=>i.avg*1.05));
   const el = document.getElementById('siteRanking');
   el.innerHTML = items.map(i => {
     const pct = (i.avg/axisMax*100).toFixed(1);
     const color = colorFor(i.avg);
     return `<div class="hbar-row">
       <div class="hbar-name">${i.site}</div>
-      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(52/axisMax*100).toFixed(2)}%"></div></div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(orgAvg/axisMax*100).toFixed(2)}%"></div></div>
       <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
     </div>`;
   }).join('');
