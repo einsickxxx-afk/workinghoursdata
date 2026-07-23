@@ -1718,7 +1718,19 @@ let SITE_LIST = [];
 let TEAM_LIST = [];
 let CURRENT_CSV_TEXT = '';
 let CSV_IS_SAMPLE = true;
+let EMP_ID_LEN = 8;
 
+function fixEmpId(id){
+   const s = String(id||'').trim();
+   return s.padStart(EMP_ID_LEN, '0');
+}
+function hireYYYYMM(id){
+   const s = fixEmpId(id);
+   const yy = s.slice(0,2);
+   const mm = s.slice(2,4);
+   return parseInt('20'+yy+mm, 10);
+   
+   
 /* ===================== 완성 파일로 내보내기 =====================
    현재 불러온 CSV 데이터를 파일 안에 그대로 박아 넣은 새 독립 HTML을
    생성해 다운로드합니다. 이렇게 만든 파일은 열자마자 이 데이터가
@@ -1938,6 +1950,10 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
 
 /* ===================== 필터 옵션 구성 ===================== */
 function buildFilterOptions(){
+  const lenCounts = {};
+  RAW_ROWS.forEach(r => { const L = String(r['사번']||'').length; lenCounts[L] = (lenCounts[L}||0)+1; });
+  EMP_ID_LEN = +Objects.entries(lenCounts).sort((a,b)=>b[1]-a[1])[0][0];
+   
   SITE_LIST = [...new Set(RAW_ROWS.map(r => r['사업장']).filter(Boolean))].sort();
   TEAM_LIST = [...new Set(RAW_ROWS.map(r => r['부서명']).filter(Boolean))].sort();
   const siteSel = document.getElementById('siteFilter');
@@ -1969,6 +1985,8 @@ function render(){
 
   let rows = RAW_ROWS.filter(r =>
     r['구분'] !== EXCLUDE_WORKTYPE && !EXEC_RANKS.includes(r['직급'])
+    && parseInt(r['년월'],10) >= hireYYYYMM(r['사번'])
+    && numH(r['주확정근무시간']) > 0
   );
   if(site !== 'all') rows = rows.filter(r => r['사업장'] === site);
   if(team !== 'all') rows = rows.filter(r => r['부서명'] === team);
@@ -1988,6 +2006,8 @@ function render(){
 // 전사업부(필터 미적용) 비교용 데이터
    let orgRows = RAW_ROWS.filter(r =>
       r['구분'] !== EXCLUDE_WORKTYPE && !EXEC_RANKS.includes(r['직급'])
+      && parseInt(r['년월'],10) >= hireYYYYMM(r['사번'])
+      && numH(r['주확정근무시간']) > 0
    );
    orgRows.forEach(r => { r._week = weekKey(r); r._Q = numH(r['주확정근무시간']); });
    const orgLatestRows = orgRows.filter(r => r._week === latest);
