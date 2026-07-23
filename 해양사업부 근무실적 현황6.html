@@ -1729,7 +1729,7 @@ function hireYYYYMM(id){
    const yy = s.slice(0,2);
    const mm = s.slice(2,4);
    return parseInt('20'+yy+mm, 10);
-   
+}   
    
 /* ===================== 완성 파일로 내보내기 =====================
    현재 불러온 CSV 데이터를 파일 안에 그대로 박아 넣은 새 독립 HTML을
@@ -1951,8 +1951,8 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
 /* ===================== 필터 옵션 구성 ===================== */
 function buildFilterOptions(){
   const lenCounts = {};
-  RAW_ROWS.forEach(r => { const L = String(r['사번']||'').length; lenCounts[L] = (lenCounts[L}||0)+1; });
-  EMP_ID_LEN = +Objects.entries(lenCounts).sort((a,b)=>b[1]-a[1])[0][0];
+  RAW_ROWS.forEach(r => { const L = String(r['사번']||'').length; lenCounts[L] = (lenCounts[L]||0)+1; });
+  EMP_ID_LEN = +Object.entries(lenCounts).sort((a,b)=>b[1]-a[1])[0][0];
    
   SITE_LIST = [...new Set(RAW_ROWS.map(r => r['사업장']).filter(Boolean))].sort();
   TEAM_LIST = [...new Set(RAW_ROWS.map(r => r['부서명']).filter(Boolean))].sort();
