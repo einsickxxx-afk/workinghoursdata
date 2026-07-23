@@ -2097,6 +2097,10 @@ function renderTrend(rows, weekKeysFull){
 function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
   const colorFor = (v) => v>=52 ? 'var(--coral)' : v>=48 ? 'var(--steel)' : v>=44 ? 'var(--skyblue)' : 'var(--pale)';
 
+  document. getElementById('deptOrgAvgLabel').textContent = fmt1(
+     orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0
+  );
+   
   // 특정 팀을 선택한 경우: 선택 팀 평균 vs 사업부 전체 평균, 2개 막대만 비교
   if(activeTeam && activeTeam !== 'all'){
      const teamAvg = latestRows.length ? latestRows.reduce((s,r) => s+r._Q,0)/latestRows.length : 0;
@@ -2264,6 +2268,10 @@ function renderWeekend(latestRows){
 /* ===================== 사업장별 순위 ===================== */
 function renderSiteRanking(latestRows, orgLatestRows, activeSite){
   const colorFor = (v) => v>=52 ? 'var(--coral)' : v>=48 ? 'var(--steel)' : v>=44 ? 'var(--skyblue)' : 'var(--pale)';
+
+  document.getElementById('siteOrgAvgLabel').textContent = fmt1(
+     orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0
+  );
 
   // 특정 사업장을 선택한 경우: 선택 사업장 평균 vs 사업부 전체 평균, 2개 막대만 비교
   if(activeSite && activeSite !== 'all'){
