@@ -2460,6 +2460,7 @@ function renderQuadrant(latestRows, team){
   const svg = document.getElementById('quadrantChart');
   const legend = document.getElementById('quadLegend');
   const note = document.getElementById('quadrantModeNote');
+  const tooltip = document.getElementById('quadTooltip');
   if(!latestRows || !latestRows.length){ svg.innerHTML=''; legend.innerHTML=''; note.textContent='–'; return; }
 
   const overallAvg = latestRows.reduce((s,r)=>s+r._Q,0)/latestRows.length;
@@ -2497,6 +2498,42 @@ function renderQuadrant(latestRows, team){
   const sx = x => L + (x - xMin) / (xMax - xMin) * (W - L - R);
   const sy = y => T + (1 - (y - yMin) / (yMax - yMin)) * (H - T - B);
 
+  // ---- 겹침 방지: 평균 대각선(y=x-avg) 위 점들을 수직 방향으로 살짝 분산 ----
+  const rawPts = points.map(p => ({ ...p, cx0: sx(p.x), cy0: sy(p.y) }));
+  const dirX = sx(xMax) - sx(xMin), dirY = sy(xMax-overallAvg) - sy(xMin-overallAvg);
+  const dirLen = Math.hypot(dirX, dirY) || 1;
+  const ux = dirX/dirLen, uy = dirY/dirLen;
+  const nx = -uy, ny = ux;
+  rawPts.forEach(p => { p.t = p.cx0*ux + p.cy0*uy; });
+  rawPts.sort((a,b) => a.t - b.t);
+
+  const minGap = mode==='dept' ? 20 : 15;
+  let i = 0, clusterSeq = 0;
+  const clusterMap = {};
+  while(i < rawPts.length){
+    let j = i;
+    while(j+1 < rawPts.length && (rawPts[j+1].t - rawPts[j].t) < minGap) j++;
+    const clusterSize = j - i + 1;
+    const clusterId = 'c' + (clusterSeq++);
+    const members = rawPts.slice(i, j+1);
+    if(clusterSize > 1) clusterMap[clusterId] = members;
+    for(let k = 0; k < clusterSize; k++){
+      const p = rawPts[i+k];
+      p.clusterId = clusterId;
+      p.clusterSize = clusterSize;
+      if(clusterSize > 1){
+        const order = k - (clusterSize-1)/2;
+        const offset = order * (minGap*0.62);
+        p.px = p.cx0 + nx*offset;
+        p.py = p.cy0 + ny*offset;
+      } else {
+        p.px = p.cx0;
+        p.py = p.cy0;
+      }
+    }
+    i = j+1;
+  }
+
   // ---- x축 눈금 ----
   const xTicks = [];
   for(let v = Math.ceil(xMin/2)*2; v <= xMax; v += 2) xTicks.push(v);
@@ -2514,27 +2551,28 @@ function renderQuadrant(latestRows, team){
     <text x="${L-8}" y="${sy(v)+3.5}" font-size="10.5" fill="var(--muted)" font-weight="700" text-anchor="end">${v>0?'+':''}${v}</text>
   `).join('');
 
-  // ---- 기준선: 52시간 상한, 40시간 하한, 평균(0) ----
+  // ---- 십자 기준선 (연한 톤): (평균, 0) 교차점이 사분면 중심 ----
   const refLines = `
-    <line x1="${sx(52)}" y1="${T}" x2="${sx(52)}" y2="${H-B}" stroke="var(--coral)" stroke-width="1.6" stroke-dasharray="5,4"/>
-    <text x="${sx(52)}" y="${T-6}" font-size="10.5" fill="var(--coral)" font-weight="800" text-anchor="middle">52h 상한</text>
-    <line x1="${sx(40)}" y1="${T}" x2="${sx(40)}" y2="${H-B}" stroke="var(--steel)" stroke-width="1.6" stroke-dasharray="5,4"/>
-    <text x="${sx(40)}" y="${T-6}" font-size="10.5" fill="var(--steel)" font-weight="800" text-anchor="middle">40h</text>
-    <line x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(0)}" stroke="var(--navy)" stroke-width="1.6" stroke-dasharray="5,4"/>
-    <text x="${W-R}" y="${sy(0)-6}" font-size="10.5" fill="var(--navy)" font-weight="800" text-anchor="end">평균(0)</text>
+    <line x1="${sx(overallAvg)}" y1="${T}" x2="${sx(overallAvg)}" y2="${H-B}" stroke="var(--steel)" stroke-width="1.3" stroke-dasharray="4,4" stroke-opacity="0.55"/>
+    <line x1="${L}" y1="${sy(0)}" x2="${W-R}" y2="${sy(0)}" stroke="var(--steel)" stroke-width="1.3" stroke-dasharray="4,4" stroke-opacity="0.55"/>
+    <text x="${sx(overallAvg)}" y="${T-6}" font-size="10.5" fill="var(--steel)" font-weight="700" text-anchor="middle">평균 ${fmt1(overallAvg)}h</text>
+    <text x="${W-R}" y="${sy(0)-6}" font-size="10.5" fill="var(--steel)" font-weight="700" text-anchor="end">평균(0)</text>
   `;
 
-  // ---- 점 ----
+  // ---- 점: 개인 모드 - 안 겹치면 이름 항상 표시 / 겹치면 클릭 시 명단 툴팁 ----
   const rMax = mode==='dept' ? Math.max(...points.map(p=>p.n)) : 1;
-  const pointEls = points.map(p => {
-    const cx = sx(p.x), cy = sy(p.y);
+  const pointEls = rawPts.map(p => {
+    const cx = p.px, cy = p.py;
     const r = mode==='dept' ? (7 + Math.sqrt(p.n/Math.max(1,rMax))*7) : 6.5;
     const color = colorForHour(p.x);
     const labelAnchor = cx > W - 120 ? 'end' : 'start';
     const labelDx = cx > W - 120 ? -(r+6) : (r+6);
-    return `<g class="quad-point">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" fill-opacity="0.85" stroke="var(--navy)" stroke-width="1.3"/>
-      <text x="${cx+labelDx}" y="${cy+3.5}" font-size="10.5" font-weight="700" fill="var(--navy)" text-anchor="${labelAnchor}">${p.label}</text>
+    const isClustered = mode==='person' && p.clusterSize > 1;
+    const gClass = isClustered ? 'quad-point clustered' : 'quad-point';
+    const labelHtml = isClustered ? '' : `<text class="quad-point-label${mode==='person' ? ' always' : ''}" x="${cx+labelDx}" y="${cy+3.5}" font-size="10.5" font-weight="700" fill="var(--navy)" text-anchor="${labelAnchor}">${p.label}</text>`;
+    return `<g class="${gClass}" ${isClustered ? `data-cluster="${p.clusterId}"` : ''}>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" fill-opacity="0.85" stroke="rgba(13,39,68,0.3)" stroke-width="1.2"/>
+      ${labelHtml}
       <title>${p.label}: ${fmt1(p.x)}시간 (평균 대비 ${p.y>=0?'+':''}${fmt1(p.y)}시간)${mode==='dept'?` · ${p.n}명`:''}</title>
     </g>`;
   }).join('');
@@ -2548,12 +2586,30 @@ function renderQuadrant(latestRows, team){
     <text x="16" y="${(T+H-B)/2}" font-size="11.5" font-weight="800" fill="var(--navy)" text-anchor="middle" transform="rotate(-90 16 ${(T+H-B)/2})">평균 대비 편차(시간)</text>
   `;
 
+  // ---- 겹친 점 클릭 시 명단 툴팁 ----
+  svg.querySelectorAll('.quad-point.clustered').forEach(g => {
+    g.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cid = g.dataset.cluster;
+      const members = clusterMap[cid] || [];
+      const alreadyOpen = tooltip.style.display === 'block' && tooltip.dataset.cluster === cid;
+      if(alreadyOpen){ tooltip.style.display = 'none'; return; }
+      tooltip.dataset.cluster = cid;
+      tooltip.innerHTML = `<b>${members.length}명</b><br>` + members.map(m => `${m.label} (${fmt1(m.x)}시간)`).join('<br>');
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 16) + 'px';
+      tooltip.style.top = (e.clientY + 16) + 'px';
+    });
+  });
+  tooltip.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => { tooltip.style.display = 'none'; });
+
   legend.innerHTML = `
     <span class="quad-legend-item"><span class="dot" style="background:var(--coral)"></span>52시간 이상</span>
     <span class="quad-legend-item"><span class="dot" style="background:var(--steel)"></span>48~52시간</span>
     <span class="quad-legend-item"><span class="dot" style="background:var(--skyblue)"></span>44~48시간</span>
     <span class="quad-legend-item"><span class="dot" style="background:var(--pale)"></span>44시간 미만</span>
-    ${mode==='dept' ? '<span class="quad-legend-item">점 크기 = 부서 인원 수</span>' : ''}
+    ${mode==='dept' ? '<span class="quad-legend-item">점 크기 = 부서 인원 수</span>' : '<span class="quad-legend-item">겹친 점은 클릭하면 명단이 보입니다</span>'}
   `;
 }
 
