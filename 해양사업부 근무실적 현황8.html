@@ -220,16 +220,17 @@ tbody tr:last-child td{ border-bottom:none; }
 .quad-legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; }
 .quad-legend-item{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); font-weight:700; }
 .quad-legend-item .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
-.quad-poit-label{ opacity:0; transition:opacity .12s; pointer-events:none; }
+.quad-point-label{ opacity:0; transition:opacity .12s; pointer-events:none; }
 .quad-point-label.always{ opacity:1; }
 .quad-point:hover .quad-point-label{ opacity:1; }
 .quad-point:hover circle{ stroke:var(--navy); stroke-width:2; }
 .quad-point.clustered circle{ cursor:pointer; }
 .quad-tooltip{
    position:fixed; display:none; background:var(--navy); color:#fff; font-size:12px; font-weight:600;
-   line-height:1.6; padding:10px 14px; border-radius:10px; max-width:220px; max-height:260px;
+   line-height:1.6; padding:12px 16px; border-radius:10px; max-width:300px; max-height:260px;
    overflow-y:auto; z-index:100; pointer-events:auto; box-shadow:0 8px 20px rgba(13,39,68,0.25);
-
+}
+   
 .error-banner{
   background:var(--coral-bg); color:var(--coral); border:1px solid var(--coral);
   border-radius:14px; padding:14px 18px; font-size:13px; font-weight:700;
