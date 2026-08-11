@@ -220,6 +220,15 @@ tbody tr:last-child td{ border-bottom:none; }
 .quad-legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; }
 .quad-legend-item{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); font-weight:700; }
 .quad-legend-item .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+.quad-poit-label{ opacity:0; transition:opacity .12s; pointer-events:none; }
+.quad-point-label.always{ opacity:1; }
+.quad-point:hover .quad-point-label{ opacity:1; }
+.quad-point:hover circle{ stroke:var(--navy); stroke-width:2; }
+.quad-point.clustered circle{ cursor:pointer; }
+.quad-tooltip{
+   position:fixed; display:none; background:var(--navy); color:#fff; font-size:12px; font-weight:600;
+   line-height:1.6; padding:10px 14px; border-radius:10px; max-width:220px; max-height:260px;
+   overflow-y:auto; z-index:100; pointer-events:auto; box-shadow:0 8px 20px rgba(13,39,68,0.25);
 
 .error-banner{
   background:var(--coral-bg); color:var(--coral); border:1px solid var(--coral);
@@ -402,6 +411,7 @@ tbody tr:last-child td{ border-bottom:none; }
         </div>
         <svg class="quadrant-svg" id="quadrantChart" viewBox="0 0 760 480" preserveAspectRatio="xMidYMid meet"></svg>
         <div class="quad-legend" id="quadLegend"></div>
+        <div id="quadTooltip" class="quad-tooltip"></div>
         <p class="footer-note" style="margin-top:14px;">※ x축은 확정근무시간(시간), y축은 기준 평균 대비 편차입니다. 부서 필터를 지정하지 않으면 부서 단위 평균이, 특정 부서를 지정하면 해당 부서 소속 인원 개인별 분포가 표시됩니다.</p>
       </div>
     </div><!-- /pageQuadrant -->
