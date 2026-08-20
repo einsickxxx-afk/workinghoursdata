@@ -2166,11 +2166,12 @@ function renderKpis(latestRows, monthKeys, allRows,orgLatestRows){
   document.getElementById('kpiAvg').innerHTML = fmt1(avg)+'<span class="unit">시간</span>';
   document.getElementById('kpiAvgSub').textContent = `법정 상한 대비 ${fmt1(Math.max(0,52-avg))}시간 여유`;
 
-  const weekendPeople = latestRows.filter(r => numH(r['토'])>0 || numH(r['일'])>0).length;
+  const weekendSat = latestRows.filter(r => numH(r['토'])>0);
+  const weekendSun = latestRows.filter(r => numH(r['일'])>0);
+  const weekendBoth = weekendSat.filter(r => numH(r['일'])>0).length;
+  const weekendPeople = latestRows.filter(r => numH(r['토'])>0 || numH(r['일'])>0.length;
   document.getElementById('kpiWeekend').innerHTML = weekendPeople+'<span class="unit">명</span>';
-  const weekendTeams = new Set(latestRows.filter(r => numH(r['토'])>0 || numH(r['일'])>0).map(r=>r['부서명'])).size;
-  document.getElementById('kpiWeekendSub').textContent = `${weekendTeams}개 부서에서 발생`;
-}
+  document.getElementById('kpiWeekendSub').textContent = `토 ${weekendSat.length} · 일 ${weekendSun.length} · 중복 ${weekendBoth}`;
 
 /* ===================== 추이 ===================== */
 function renderTrend(rows, weekKeysFull){
@@ -2573,14 +2574,20 @@ function renderQuadrant(latestRows, team){
   groups.forEach((g,idx)=>{ g.id = 'g'+idx; });
   const pointEls = groups.map(g => {
     const cx = sx(g.x), cy = sy(g.y);
-    const r = 7 + Math.sqrt(g.n/Math.max(1,nMax))*11;
+    const r = mode==='dept' ? (7 + Math.sqrt(g.n/Math.max(1,nMax))*7) : (7 + Math.sqrt(g.n/Math.max(1,nMax))*11);
     const color = colorForHour(g.x);
     const title = mode==='dept'
       ? `${g.teamName}: 평균 ${fmt1(g.x)}시간 (평균 대비 ${g.y>=0?'+':''}${fmt1(g.y)}시간) · ${g.n}명`
       : `${fmt1(g.x)}시간 근무 ${g.n}명 (평균 대비 ${g.y>=0?'+':''}${fmt1(g.y)}시간)`;
+    const labelAnchor = cx > W - 120 ? 'end' : 'start';
+    const labelDx = cx > W - 120 ? -(r+6) : (r+6);
+    const teamLabel = mode==='dept'
+      ? `<text x="${cx+labelDx}" y="${cy+3.5}" font-size="10.5" font-weight="700" fill="var(--navy)" text-anchor="${labelAnchor}" pointer-events="none">${g.teamName}</text>`
+      : '';
     return `<g class="quad-point" data-group="${g.id}">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" fill-opacity="0.85" stroke="rgba(13,39,68,0.3)" stroke-width="1.2"/>
-      ${g.n>1 ? `<text x="${cx}" y="${cy+4}" font-size="11" font-weight="800" fill="var(--navy)" text-anchor="middle" pointer-events="none">${g.n}</text>` : ''}
+      ${mode==='person' && g.n>1 ? `<text x="${cx}" y="${cy+4}" font-size="11" font-weight="800" fill="var(--navy)" text-anchor="middle" pointer-events="none">${g.n}</text>` : ''}
+      ${teamLabel}
       <title>${title}</title>
     </g>`;
   }).join('');
