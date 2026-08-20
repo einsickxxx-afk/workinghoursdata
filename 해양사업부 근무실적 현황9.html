@@ -2628,6 +2628,10 @@ function renderQuadrant(latestRows, team){
   svg.innerHTML = `
     ${xTickEls}${yTickEls}
     <rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="none" stroke="var(--border)" stroke-width="1"/>
+    ${refLines}
+    ${pointEls}
+    <text x="16" y="${(T+H-B)/2}" font-size="11.5" font-weight="800" fill="var(--navy)" text-anchor="middle" transform="rotate(-90 16 ${(T+H-B)/2})">평균 대비 편차(시간)</text>
+  `;
 
   // ---- 클릭 시 명단 툴팁 (이름/직급/근무시간/평균 대비 편차) ----
   const groupMap = {};
