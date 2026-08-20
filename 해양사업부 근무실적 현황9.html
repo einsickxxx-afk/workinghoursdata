@@ -2169,7 +2169,7 @@ function renderKpis(latestRows, monthKeys, allRows,orgLatestRows){
   const weekendSat = latestRows.filter(r => numH(r['토'])>0);
   const weekendSun = latestRows.filter(r => numH(r['일'])>0);
   const weekendBoth = weekendSat.filter(r => numH(r['일'])>0).length;
-  const weekendPeople = latestRows.filter(r => numH(r['토'])>0 || numH(r['일'])>0.length;
+  const weekendPeople = latestRows.filter(r => numH(r['토'])>0 || numH(r['일'])>0).length;
   document.getElementById('kpiWeekend').innerHTML = weekendPeople+'<span class="unit">명</span>';
   document.getElementById('kpiWeekendSub').textContent = `토 ${weekendSat.length} · 일 ${weekendSun.length} · 중복 ${weekendBoth}`;
 
