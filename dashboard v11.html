@@ -2633,7 +2633,7 @@ function renderRiskTable(rows, weekKeys, latest){
       risk.push({ ...e, streak, latestQ: e.weeks[latest] });
     }
   });
-  risk.sort((a,b) => a.team.localeCompare(b.team, 'ko') || b.streak - a.streak || (b.latestQ||0) - (a.latestQ||0));
+  risk.sort((a,b) => b.streak - a.streak || a.team.localeCompare(b.team,'ko') || (b.latestQ||0) - (a.latestQ||0));
 
   document.getElementById('kpiRisk').innerHTML = risk.length+'<span class="unit">명</span>';
   const streak4Count = risk.filter(r=>r.streak>=4).length;
