@@ -418,7 +418,7 @@ tbody tr:last-child td{ border-bottom:none; }
   <div id="bucketTooltip" class="bucket-tooltip"></div>
   <div id="quadTooltip" class="quad-tooltip"></div>
 
-  <p class="footer-note">※ CSV 불러오기로 실제 주간 근무시간 확정 데이터를 불러올 수 있습니다. 근태예외자·임원급(상무·전무·부사장·전문위원)은 자동 제외됩니다. (열 이름: No./구분/년월/주차/사번/이름/직급/사업장/부서명/월~일/주확정근무시간/평일확정근무시간/법정휴게시간/비업무_기타/비업무/비업무(중식), 시간은 분 단위)</p>
+  <p class="footer-note">※ CSV 불러오기로 실제 주간 근무시간 확정 데이터를 불러올 수 있습니다. 근태예외자·임원급(상무·전무·부사장)은 자동 제외됩니다. (열 이름: No./구분/년월/주차/사번/이름/직급/사업장/부서명/월~일/주확정근무시간/평일확정근무시간/법정휴게시간/비업무_기타/비업무/비업무(중식), 시간은 분 단위)</p>
 
 </div>
 
@@ -1780,7 +1780,7 @@ const EMBEDDED_SAMPLE_CSV = `No.,구분,년월,주차,사번,이름,직급,사�
 1320,선택적 근로시간제,202607,2주차(07월 06일~07월 12일),00126329,송성민,S5(과장),구미,구매팀,460,535,485,503,458,0,0,2442,2442,248,0,312,300
 `;
 /* ===================== 설정 ===================== */
-const EXEC_RANKS = ['상무','전무','부사장','전문위원'];
+const EXEC_RANKS = ['상무','전무','부사장'];
 const EXCLUDE_WORKTYPE = '근태예외자';
 const WEEKDAY_COLS = ['월','화','수','목','금'];
 const DEFAULT_CSV = 'data/timesheet_sample.csv';
@@ -2047,6 +2047,15 @@ function weekKey(r){
 }
 function fmt1(n){ return (Math.round(n*10)/10).toFixed(1); }
 function fmt2(n){ return (Math.round(n*100)/100).toFixed(2); }
+function colorForHourStep(v){
+   const r = Number(fmt1(v)); // 표시값 기준 반올림
+   if(r < 42) return 'var(--pale)';
+   if(r < 44) return '#CFE0EC';
+   if(r < 46) return 'var(--skyblue)';
+   if(r < 48) return '#5F84A0';
+   if(r < 50) return 'var(--steel)';
+   return 'var(--coral)';
+}
 
 /* ===================== 월 단위 집계 =====================
    특정 년월(targetMonth)에 해당하는 행들을 사번 기준으로 묶어
@@ -2212,17 +2221,16 @@ function renderTrend(rows, weekKeysFull){
   `;
   const labelsEl = document.getElementById('trendLabels');
   labelsEl.innerHTML = weekKeys.map((wk,i) => {
-    const isLast = i===weekKeys.length-1;
     const [yyyymm, wn] = wk.split('-');
     const mm = yyyymm.slice(4,6);
     const short = `${mm}/${parseInt(wn,10)}주`;
-    return `<span>${short}${isLast?'(최근)':''}</span>`;
+    return `<span>${short}${short}</span>`;
   }).join('');
 }
 
 /* ===================== 부서별 순위 ===================== */
 function renderDeptRanking(latestRows, orgLatestRows, activeTeam){
-  const colorFor = (v) => v>=52 ? 'var(--coral)' : v>=48 ? 'var(--steel)' : v>=44 ? 'var(--skyblue)' : 'var(--pale)';
+  const colorFor = colorForHourStep;
 
   document. getElementById('deptOrgAvgLabel').textContent = fmt1(
      orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0
@@ -2387,14 +2395,14 @@ function renderWeekend(latestRows){
   const satAvg = sat.length ? sat.reduce((s,r)=>s+numH(r['토']),0)/sat.length : 0;
   const sunAvg = sun.length ? sun.reduce((s,r)=>s+numH(r['일']),0)/sun.length : 0;
   document.getElementById('weekendStat').innerHTML = `
-    <div class="weekend-row"><div><div class="wname">토요일 근무</div><div class="wsub">이번 달 평균 ${fmt1(satAvg)}시간 / 근무 이력자 기준</div></div><div class="wnum">${sat.length}명</div></div>
-    <div class="weekend-row"><div><div class="wname">일요일 근무</div><div class="wsub">이번 달 평균 ${fmt1(sunAvg)}시간 / 근무 이력자 기준</div></div><div class="wnum">${sun.length}명</div></div>
+    <div class="weekend-row"><div><div class="wname">토요일 근무</div><div class="wsub">이번 달 평균 ${fmt1(satAvg)}시간</div></div><div class="wnum">${sat.length}명</div></div>
+    <div class="weekend-row"><div><div class="wname">일요일 근무</div><div class="wsub">이번 달 평균 ${fmt1(sunAvg)}시간</div></div><div class="wnum">${sun.length}명</div></div>
   `;
 }
 
 /* ===================== 사업장별 순위 ===================== */
 function renderSiteRanking(latestRows, orgLatestRows, activeSite){
-  const colorFor = (v) => v>=52 ? 'var(--coral)' : v>=48 ? 'var(--steel)' : v>=44 ? 'var(--skyblue)' : 'var(--pale)';
+  const colorFor = colorForHourStep;
 
   document.getElementById('siteOrgAvgLabel').textContent = fmt1(
      orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0
@@ -2470,8 +2478,8 @@ function renderRiskTable(rows, weekKeys, latest){
   risk.sort((a,b) => b.streak - a.streak || (b.latestQ||0) - (a.latestQ||0));
 
   document.getElementById('kpiRisk').innerHTML = risk.length+'<span class="unit">명</span>';
-  const maxStreak = risk.length ? Math.max(...risk.map(r=>r.streak)) : 0;
-  document.getElementById('kpiRiskSub').textContent = maxStreak>=3 ? `${maxStreak}주 연속 52시간 포함` : '\u00A0';
+  const streak4Count = risk.filter(r=>r.streak>=4).length;
+  document.getElementById('kpiRiskSub').textContent = streak4Count>0 ? `4주 연속 52시간 ${streak4Count}명` : '\u00A0';
 
   const tagClass = (n) => n>=4 ? 'w4' : n>=3 ? 'w3' : 'w2';
   const tbody = document.getElementById('riskTableBody');
@@ -2484,7 +2492,7 @@ function renderRiskTable(rows, weekKeys, latest){
 
 /* ===================== 사분면 분포 ===================== */
 function colorForHour(v){
-  return v>=52 ? 'var(--coral)' : v>=48 ? 'var(--steel)' : v>=44 ? 'var(--skyblue)' : 'var(--pale)';
+  return colorForHourStep(v);
 }
 
 function renderQuadrant(latestRows, team){
@@ -2658,11 +2666,13 @@ function renderQuadrant(latestRows, team){
   document.addEventListener('click', () => { tooltip.style.display = 'none'; });
 
   legend.innerHTML = `
-    <span class="quad-legend-item"><span class="dot" style="background:var(--coral)"></span>52시간 이상</span>
-    <span class="quad-legend-item"><span class="dot" style="background:var(--steel)"></span>48~52시간</span>
-    <span class="quad-legend-item"><span class="dot" style="background:var(--skyblue)"></span>44~48시간</span>
-    <span class="quad-legend-item"><span class="dot" style="background:var(--pale)"></span>44시간 미만</span>
-    <span class="quad-legend-item">점 크기 = 인원 수 · 클릭하면 명단 표시</span>
+    <span class="quad-legend-item"><span class="dot" style="background:var(--coral)"></span>50시간 이상</span>
+    <span class="quad-legend-item"><span class="dot" style="background:var(--steel)"></span>48~50시간</span>
+    <span class="quad-legend-item"><span class="dot" style="background:#5F84A0"></span>46~48시간</span>
+    <span class="quad-legend-item"><span class="dot" style="background:var(--skyblue)"></span>44~46시간</span>
+    <span class="quad-legend-item"><span class="dot" style="background:#CFE0EC"></span>42~44시간</span>
+    <span class="quad-legend-item"><span class="dot" style="background:var(--pale)"></span>42시간 미만</span>
+    <span class="quad-legend-item">점 크기는 인원 수와 비례하며, 클릭하면 해당 인원 명단이 표시됨</span>
   `;
 }
 
