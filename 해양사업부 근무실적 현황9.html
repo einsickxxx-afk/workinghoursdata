@@ -135,11 +135,11 @@ body{
    color:#fff;
    font-size:12px;
    font-weight:600;
-   line-height:1.6;
-   padding:10px 14px;
+   line-height:1.7;
+   padding:12px 16px;
    border-radius:10px;
-   max-width:220px;
-   max-height:260px;
+   max-width:300px;
+   max-height:320px;
    overflow-y:auto;
    z-index:100;
    pointer-events:auto;
@@ -2299,7 +2299,7 @@ function renderBuckets(latestRows){
     else if(q < 50) idx = 4;
     else idx = 5; // 52시간 이상도 여기로 통합
     counts[idx]++;
-     names[idx].push(r['이름']);
+     names[idx].push(r);
   });
   const colors = ['var(--pale)','#CFE0EC','var(--skyblue)','#5F84A0','var(--steel)','var(--coral)'];
   const textColors = ['var(--navy)','var(--navy)','#fff','#fff','#fff','#fff'];
@@ -2349,6 +2349,16 @@ function renderBuckets(latestRows){
            return;
         }
         tooltip.dataset.idx = idx;
+           const byTeam = {};
+           names[idx].forEach(r => {
+              const t = r['부서명'] || '기타';
+              (byTeam[t] = byTeam[t] || []).push(r);
+           });
+           const teamBlocks = Object.keys(byTeam).sort().map(t => {
+              const list = byTeam[t].map(r => `${r['이름']}(${r['직급']}) - 월평균 ${fmt1(r._Q)}시간`).join('<br>');
+              return `<b>${t}</b><br>${list}`;
+           }).join('<br><br>');
+           tooltip.innerHTML = `<b>${labels[idx]}시간 (${counts[idx]}명)</b><br><br>${teamBlocks}`;
         tooltip.innerHTML = `<b>${labels[idx]}시간 (${counts[idx]}명)</b><br>${names[idx].join(', ')}`;
         tooltip.style.display = 'block';
         tooltip.style.left = (e.clientX + 16) + 'px';
@@ -2475,7 +2485,7 @@ function renderRiskTable(rows, weekKeys, latest){
       risk.push({ ...e, streak, latestQ: e.weeks[latest] });
     }
   });
-  risk.sort((a,b) => b.streak - a.streak || (b.latestQ||0) - (a.latestQ||0));
+  risk.sort((a,b) => a.team.localeCompare(b.team, 'ko') || b.streak - a.streak || (b.latestQ||0) - (a.latestQ||0));
 
   document.getElementById('kpiRisk').innerHTML = risk.length+'<span class="unit">명</span>';
   const streak4Count = risk.filter(r=>r.streak>=4).length;
