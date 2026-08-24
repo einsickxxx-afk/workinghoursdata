@@ -2336,7 +2336,7 @@ function render(){
   renderSiteRanking(latestRows, orgLatestRows, site);
   const combinedRiskRows = rows.concat(prevRows);
   const combinedWeekKeys = [...new Set(combinedRiskRows.map(r=>r._week))].sort();
-  renderRiskTable(combinedRiskRows, combinedweekKeys, latestWeek, rows, prevRows);
+  renderRiskTable(combinedRiskRows, combinedWeekKeys, latestWeek, rows, prevRows);
   renderQuadrant(latestRows, team);
   updatePagesViewportHeight();
 }
