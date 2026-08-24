@@ -2793,10 +2793,11 @@ const riskListHtml = (list, withLeftLabel) => {
       const namesHtml = members.map(r => {
          const isLeft = withLeftLabel && !currentIds.has(r.id);
          const leftTag = isLeft ? `<span class="tag w2" style="margin-left:4px;">근무 상태 변경</span>` : '';
-         return `<span class="risk-name-chip">${r.name}<span class="risk-name-rank">$[r.rank}</span>${leftTag}</span>`;
+         return `<span class="risk-name-chip">${r.name}<span class="risk-name-rank">${r.rank}</span>${leftTag}</span>`;
       }).join('');
       return `<details class="risk-team-group">
          <summary>${t} <span class="risk-team-count">${members.length}명</span></summary>
+         <div class="risk-name-list">${namesHtml}</div>
       </details>`;
    }).join('');
 };
