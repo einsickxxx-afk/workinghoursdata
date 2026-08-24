@@ -2735,26 +2735,44 @@ function renderRiskTable(combinedRows, combinedWeekKeys, latest, currentRows, pr
   risk.sort((a,b) => b.streak - a.streak || a.team.localeCompare(b.team,'ko') || (b.latestQ||0) - (a.latestQ||0));
 
   // ---- 전월 위험군 인원수 (증감 비교 기준, 전월 데이터만으로 계산) ----
-  let prevRiskCount = null;
-  if(prevRows && prevRows.length){
-    const prevWeekKeys = [...new Set(prevRows.map(r=>r._week))].sort();
-    const prevReversed = [...prevWeekKeys].reverse();
-    const byEmpPrev = {};
-    prevRows.forEach(r => {
-      if(!byEmpPrev[r['사번']]) byEmpPrev[r['사번']] = {};
-      byEmpPrev[r['사번']][r._week] = r._Q;
-    });
-    prevRiskCount = 0;
-    Object.values(byEmpPrev).forEach(weeks => {
-      let streak = 0;
-      for(const wk of prevReversed){
-        const q = weeks[wk];
-        if(q !== undefined && q >= 52) streak++;
-        else break;
-      }
-      if(streak >= 2) prevRiskCount++;
-    });
-  }
+let prevRiskCount = null;
+let prevRiskIds = new Set();
+if(prevRows && prevRows.length){
+  const prevWeekKeys = [...new Set(prevRows.map(r=>r._week))].sort();
+  const prevReversed = [...prevWeekKeys].reverse();
+  const byEmpPrev = {};
+  prevRows.forEach(r => {
+    if(!byEmpPrev[r['사번']]) byEmpPrev[r['사번']] = {};
+    byEmpPrev[r['사번']][r._week] = r._Q;
+  });
+  prevRiskCount = 0;
+  Object.entries(byEmpPrev).forEach(([id, weeks]) => {
+    let streak = 0;
+    for(const wk of prevReversed){
+      const q = weeks[wk];
+      if(q !== undefined && q >= 52) streak++;
+      else break;
+    }
+    if(streak >= 2){ prevRiskCount++; prevRiskIds.add(id); }
+  });
+}
+
+// ---- 신규진입/이탈 명단 (byEmp는 이번달+전월 병합 데이터라 이름·부서 조회 가능) ----
+const currentRiskIds = new Set(risk.map(r=>r.id));
+const newEntries = (prevRows && prevRows.length) ? risk.filter(r => !prevRiskIds.has(r.id)) : [];
+const exits = (prevRows && prevRows.length)
+  ? [...prevRiskIds].filter(id => !currentRiskIds.has(id)).map(id => byEmp[id]).filter(Boolean)
+  : [];
+
+const riskListHtml = (list) => list.length
+  ? list.map(r => `<p style="margin:0 0 8px;font-size:12.5px;font-weight:600;">${r.name} <span style="color:var(--muted);font-weight:600;">· ${r.team} · ${r.rank}</span></p>`).join('')
+  : '<p style="margin:0;font-size:12.5px;color:var(--muted);">해당자 없음</p>';
+
+document.getElementById('riskNewList').innerHTML = riskListHtml(newEntries);
+document.getElementById('riskExitList').innerHTML = riskListHtml(exits);
+document.getElementById('riskChangeNote').textContent = (prevRows && prevRows.length)
+  ? `신규 ${newEntries.length}명 · 이탈 ${exits.length}명`
+  : '전월 데이터를 불러오면 표시됩니다';
 
   document.getElementById('kpiRisk').innerHTML = risk.length+'<span class="unit">명</span>';
   const streak4Count = risk.filter(r=>r.streak>=4).length;
