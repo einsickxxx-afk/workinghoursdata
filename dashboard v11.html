@@ -174,6 +174,22 @@ tbody tr:last-child td{ border-bottom:none; }
 .tag.w4{ background:var(--coral-bg); color:var(--coral); }
 .tag.w3{ background:#FCEFDD; color:#C97A2B; }
 .tag.w2{ background:#EEF3F7; color:var(--steel); }
+   .risk-team-group{ border:1px solid var(--border); border-radius:12px; padding:8px 12px; margin-bottom:8px; }
+   .risk-team-group summary{
+      cursor:pointerj; font-size:12.5px; font-weight:700; color:var(--navy);
+      list-style:none; display:flex; align-items:center; justify-content:space-between;
+   }
+   .risk-team-group summary::-webkit-details-marker{ display:none; }
+   .risk-team-group summary::after{content:'▼'; color:var(--muted); font-size:10px; margin-left:8px; }
+   .risk-team-group[open] summary::after{ content:'▲'; }
+   .risk-team-count{ font-size:11px; color:var(--muted); font-weight:600; }
+   .risk-name-list{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+   .risk-name-chip{
+      display:inline-flex; align-items:center; gap:4px; background:#F6F9FB;
+      border-radius:999px; padding:5px 10px; font-size:12px; font-weight:700; color:var(--navy);
+   }
+   .risk-name-rank{ font-size:10.5px; color:var(--muted); font-weight:600; }
+      
 
 .risk-table-wrap{
    max-height:420px;
@@ -2766,10 +2782,22 @@ const exits = (prevRows && prevRows.length)
 
 const riskListHtml = (list, withLeftLabel) => {
    if(!list.length) return '<p style="margin:0;font-size:12.5px;color:var(--muted);">해당자 없음</p>';
-   return list.map(r => {
-      const isLeft = withLeftLabel && !currentIds.has(r.id);
-      const leftTag = isLeft ? `<span class="tag w2" style="margin-left:6px;">근무 상태 변경</span>` : '';
-      return `<p style="margin:0 0 8px;font-size:12.5px;font-weight:600;">${r.name} <span style="color:var(--muted);font-weight:600;">· ${r.team} · ${r.rank}</span>${leftTag}</p>`;
+   const byTeam = {};
+   list.forEach(r => {
+      const t = r.team || '기타';
+      (byTeam[t] = byTeam[t] || []).push(r);
+   });
+   const teams = Object.keys(byTeam).sort((a,b)=>a.localeCompare(b, 'ko'));
+   return teams.map(t => {
+      const members = byTeam[t];
+      const namesHtml = members.map(r => {
+         const isLeft = withLeftLabel && !currentIds.has(r.id);
+         const leftTag = isLeft ? `<span class="tag w2" style="margin-left:4px;">근무 상태 변경</span>` : '';
+         return `<span class="risk-name-chip">${r.name}<span class="risk-name-rank">$[r.rank}</span>${leftTag}</span>`;
+      }).join('');
+      return `details class="risk-team-group">
+         <summary>${t} <span class="risk-team-count">${members.length}명</span></summary>
+      </details>`;
    }).join('');
 };
 
