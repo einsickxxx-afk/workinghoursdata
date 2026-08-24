@@ -2501,7 +2501,7 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam, prevLatestRows
   if(activeTeam && activeTeam !== 'all'){
      const teamAvg = latestRows.length ? latestRows.reduce((s,r) => s+r._Q,0)/latestRows.length : 0;
      const orgAvg = orgLatestRows.length ? orgLatestRows.reduce((s,r) => s+r._Q,0)/orgLatestRows.length : 0;
-     const axisMin = Math.max(0, Math.floor(Math.min(teamAvg, orgAvg)) -3);
+     const axisMin = Math.max(0, Math.floor(Math.min(teamAvg, orgAvg)) -1);
      const axisMax = Math.max(56, teamAvg*1.05, orgAvg*1.05);
      const items = [
         { label: activeTeam, avg: teamAvg, prevAvg: prevAvgFor(activeTeam) },
