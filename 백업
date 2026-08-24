@@ -1,0 +1,33 @@
+document.getElementById('loadPrevBtn').addEventListener('click', () => document.getElementById('prevFileInput').click());
+document.getElementById('prevFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const buf = ev.target.result;
+    const bytes = new Uint8Array(buf.slice(0, 4));
+    const isZipLike = bytes[0] === 0x50 && bytes[1] === 0x4B;
+    if(isZipLike){
+      alert('엑셀 파일(.xlsx)을 그대로 올리신 것 같습니다. CSV로 저장 후 다시 선택해 주세요.');
+      return;
+    }
+    let text;
+    if(bytes[0] === 0xFF && bytes[1] === 0xFE){ text = new TextDecoder('utf-16le').decode(buf); }
+    else if(bytes[0] === 0xFE && bytes[1] === 0xFF){ text = new TextDecoder('utf-16be').decode(buf); }
+    else {
+      try{ text = new TextDecoder('utf-8', { fatal:true }).decode(buf); }
+      catch(e1){ try{ text = new TextDecoder('euc-kr').decode(buf); } catch(e2){ text = new TextDecoder('utf-8').decode(buf); } }
+    }
+    const parsed = parseCSV(text);
+    const missing = REQUIRED_COLUMNS.filter(c => !parsed.fields.includes(c));
+    if(missing.length > 0){
+      alert(`전월 CSV에서 다음 열을 찾지 못했습니다: ${missing.join(', ')}`);
+      return;
+    }
+    PREV_RAW_ROWS = parsed.data.filter(r => r['사번']);
+    PREV_CSV_LABEL = file.name;
+    document.getElementById('prevDataStatus').textContent = `전월 비교 데이터: ${file.name}`;
+    render();
+  };
+  reader.readAsArrayBuffer(file);
+});
