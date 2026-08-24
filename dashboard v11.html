@@ -2311,6 +2311,7 @@ function render(){
      );
      if(site !== 'all') prevRows = prevRows.filter(r => r['사업장'] === site);
      if(team !== 'all') prevRows = prevRows.filter(r => r['부서명'] === team);
+     prevRows.forEach(r => { r._Q = numH(r['주확정근무시간']); });
      const prevMonthKeys = [...new Set(prevRows.map(r=>r['년월']))].sort();
      const prevMonth = prevMonthKeys[prevMonthKeys.length-1];
      if(prevMonth) prevLatestRows = buildMonthlyRows(prevRows, prevMonth);
