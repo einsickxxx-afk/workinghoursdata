@@ -302,6 +302,8 @@ tbody tr:last-child td{ border-bottom:none; }
     <div class="topbar-actions">
       <button class="load-btn" id="loadBtn">CSV 불러오기</button>
       <input type="file" id="fileInput" accept=".csv">
+      <button class="load-btn" id="loadPrevBtn" style="background:var(--skyblue);">전월 CSV 불러오기</button>
+      <input type="file" id="prevFileInput" accept=".csv">
       <button class="load-btn" id="exportBtn" style="background:var(--coral);">완성 파일로 저장</button>
       <button class="load-btn" id="exportTeamCsvBtn" style="background:var(--steel);">현재 선택 필터 내용 저장</button>
       <button class="icon-btn" id="settingsBtn" title="색상·폰트 설정">⚙</button>
@@ -314,6 +316,7 @@ tbody tr:last-child td{ border-bottom:none; }
     <select id="siteFilter"><option value="all">사업장 전체</option></select>
     <select id="teamFilter"><option value="all">부서 전체</option></select>
     <span class="data-status" id="dataStatus">샘플 데이터 표시 중</span>
+    <span class="data-status" id="prevDataStatus" style="color:var(--skyblue);">전월 비교 데이터 미첨부</span>
   </div>
 
   <div class="page-nav">
@@ -331,10 +334,10 @@ tbody tr:last-child td{ border-bottom:none; }
   <div class="card" style="margin-bottom:16px;">
     <div class="panel-head">
       <h2>인원 검색</h2>
-      <span class="panel-note">이름으로 검색 · 이번 달 근무시간 확인</span>
+      <span class="panel-note">해당인원 근무시간 확인</span>
     </div>
     <div class="emp-search-row">
-      <input type="text" id="empSearchInput" placeholder="이름을 입력하세요 (예: 김윤서)" class="emp-search-input">
+      <input type="text" id="empSearchInput" placeholder="이름을 입력하세요" class="emp-search-input">
       <button class="load-btn" id="empSearchBtn">검색</button>
     </div>
     <div id="empSearchResult"></div>
@@ -441,7 +444,7 @@ tbody tr:last-child td{ border-bottom:none; }
     <div class="page" id="pageQuadrant">
       <div class="card">
         <div class="panel-head">
-          <h2>근무시간 × 평균 편차 사분면 분포</h2>
+          <h2>근무시간 편차 사분면</h2>
           <span class="panel-note" id="quadrantModeNote">–</span>
         </div>
         <svg class="quadrant-svg" id="quadrantChart" viewBox="0 0 760 480" preserveAspectRatio="xMidYMid meet"></svg>
@@ -458,7 +461,7 @@ tbody tr:last-child td{ border-bottom:none; }
   <div id="bucketTooltip" class="bucket-tooltip"></div>
   <div id="quadTooltip" class="quad-tooltip"></div>
 
-  <p class="footer-note">※ CSV 불러오기로 실제 주간 근무시간 확정 데이터를 불러올 수 있습니다. 근태예외자·임원급(상무·전무·부사장·전문위원)은 자동 제외됩니다. (열 이름: No./구분/년월/주차/사번/이름/직급/사업장/부서명/월~일/주확정근무시간/평일확정근무시간/법정휴게시간/비업무_기타/비업무/비업무(중식), 시간은 분 단위)</p>
+  <p class="footer-note">※ CSV 불러오기로 실제 주간 근무시간 확정 데이터를 불러올 수 있습니다. 근태예외자·임원급(상무·전무·부사장)은 자동 제외됩니다. (열 이름: No./구분/년월/주차/사번/이름/직급/사업장/부서명/월~일/주확정근무시간/평일확정근무시간/법정휴게시간/비업무_기타/비업무/비업무(중식), 시간은 분 단위)</p>
 
 </div>
 
@@ -1826,6 +1829,8 @@ const WEEKDAY_COLS = ['월','화','수','목','금'];
 const DEFAULT_CSV = 'data/timesheet_sample.csv';
 
 let RAW_ROWS = [];
+let PREV_RAW_ROWS = [];
+let PREV_CSV_LABEL = '';
 let SITE_LIST = [];
 let TEAM_LIST = [];
 let CURRENT_CSV_TEXT = '';
