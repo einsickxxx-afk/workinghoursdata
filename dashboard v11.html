@@ -2315,8 +2315,6 @@ function render(){
      const prevMonth = prevMonthKeys[prevMonthKeys.length-1];
      if(prevMonth) prevLatestRows = buildMonthlyRows(prevRows, prevMonth);
   }
-  const prevMonth = monthKeys.length >= 2 ? monthKeys[monthKeys.length-2] : null;
-  const prevLatestRows = prevMonth ? buildMonthlyRows(rows, prevMonth) : [];
 
   // 전사업부(필터 미적용) 비교용 데이터
   let orgRows = RAW_ROWS.filter(r =>
