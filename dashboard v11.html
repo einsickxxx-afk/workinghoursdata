@@ -2795,7 +2795,7 @@ const riskListHtml = (list, withLeftLabel) => {
          const leftTag = isLeft ? `<span class="tag w2" style="margin-left:4px;">근무 상태 변경</span>` : '';
          return `<span class="risk-name-chip">${r.name}<span class="risk-name-rank">$[r.rank}</span>${leftTag}</span>`;
       }).join('');
-      return `details class="risk-team-group">
+      return `<details class="risk-team-group">
          <summary>${t} <span class="risk-team-count">${members.length}명</span></summary>
       </details>`;
    }).join('');
