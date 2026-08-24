@@ -176,12 +176,13 @@ tbody tr:last-child td{ border-bottom:none; }
 .tag.w2{ background:#EEF3F7; color:var(--steel); }
    .risk-team-group{ border:1px solid var(--border); border-radius:12px; padding:8px 12px; margin-bottom:8px; }
    .risk-team-group summary{
-      cursor:pointerj; font-size:12.5px; font-weight:700; color:var(--navy);
-      list-style:none; display:flex; align-items:center; justify-content:space-between;
+      cursor:pointer; font-size:12.5px; font-weight:700; color:var(--navy);
+      list-style:none; display:flex; align-items:center; gap:6px;
    }
    .risk-team-group summary::-webkit-details-marker{ display:none; }
-   .risk-team-group summary::after{content:'▼'; color:var(--muted); font-size:10px; margin-left:8px; }
+   .risk-team-group summary::after{content:'▼'; color:var(--muted); font-size:10px; }
    .risk-team-group[open] summary::after{ content:'▲'; }
+   .risk-team-name{ flex:1; }
    .risk-team-count{ font-size:11px; color:var(--muted); font-weight:600; }
    .risk-name-list{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
    .risk-name-chip{
@@ -189,6 +190,7 @@ tbody tr:last-child td{ border-bottom:none; }
       border-radius:999px; padding:5px 10px; font-size:12px; font-weight:700; color:var(--navy);
    }
    .risk-name-rank{ font-size:10.5px; color:var(--muted); font-weight:600; }
+   .risk-change-list{ max-height:220px; overflow-y:auto; padding-right:4px; }
       
 
 .risk-table-wrap{
@@ -463,11 +465,11 @@ tbody tr:last-child td{ border-bottom:none; }
      <div class="row2b" style="margin-bottom:0;">
         <div>
            <p style="margin:0 0 10px;font-size:12.5px;font-weight:800;color:var(--coral);">위험군 진입</p>
-           <div id="riskNewList"></div>
+           <div id="riskNewList" class="risk-change-list"></div>
         </div>
         <div>
            <p style="margin:0 0 10px;font-size:12.5px;font-weight:800;color:var(--skyblue);">위험군 이탈</p>
-           <div id="riskExitList"></div>
+           <div id="riskExitList" class="risk-change-list"></div>
         </div>
      </div>
   </div>
@@ -2499,6 +2501,7 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam, prevLatestRows
   if(activeTeam && activeTeam !== 'all'){
      const teamAvg = latestRows.length ? latestRows.reduce((s,r) => s+r._Q,0)/latestRows.length : 0;
      const orgAvg = orgLatestRows.length ? orgLatestRows.reduce((s,r) => s+r._Q,0)/orgLatestRows.length : 0;
+     const axisMin = Math.max(0, Math.floor(Math.min(teamAvg, orgAvg)) -3);
      const axisMax = Math.max(56, teamAvg*1.05, orgAvg*1.05);
      const items = [
         { label: activeTeam, avg: teamAvg, prevAvg: prevAvgFor(activeTeam) },
@@ -2506,11 +2509,11 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam, prevLatestRows
      ];
      const el = document.getElementById('deptRanking');
      el.innerHTML = items.map(i => {
-        const pct = (i.avg/axisMax*100).toFixed(1);
+        const pct = ((i.avg-axisMin)/(axisMax-axisMin)*100).toFixed(1);
         const color = colorFor(i.avg);
         return `<div class="hbar-row">
            <div class="hbar-name">${i.label}</div>
-           <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${(orgAvg/axisMax*100). toFixed(2)}%"></div></div>
+           <div class="hbar-track"><div class="hbar-fill" style="width:${pct}%;background:${color}"></div><div class="ceiling-tick" style="left:${((orgAvg-axisMin)/(axisMax-axisMin)*100). toFixed(2)}%"></div></div>
            <span class="hbar-val" style="color:${color}">${fmt1(i.avg)}</span>
            ${deltaHtml(i.avg, i.prevAvg)}
         </div>`;
@@ -2530,6 +2533,7 @@ function renderDeptRanking(latestRows, orgLatestRows, activeTeam, prevLatestRows
    })).sort((a,b)=>b.avg-a.avg);
 
    const orgAvg = orgLatestRows.length ? orgLatestRows.reduce((s,r)=>s+r._Q,0)/orgLatestRows.length : 0;
+   const axisMin = Math.max(0, Math.floor(Math.min(orgAvg, ...items.map(i=>i.avg))) - 3);
    const axisMax = Math.max(56, orgAvg*1.05, ...items.map(i=>i.avg*1.05));
    const el = document.getElementById('deptRanking');
    el.innerHTML = items.map(i => {
@@ -2796,7 +2800,7 @@ const riskListHtml = (list, withLeftLabel) => {
          return `<span class="risk-name-chip">${r.name}<span class="risk-name-rank">${r.rank}</span>${leftTag}</span>`;
       }).join('');
       return `<details class="risk-team-group">
-         <summary>${t} <span class="risk-team-count">${members.length}명</span></summary>
+         <summary><span class="risk-team-name">${t}</span><span class="risk-team-count">${members.length}명</span></summary>
          <div class="risk-name-list">${namesHtml}</div>
       </details>`;
    }).join('');
