@@ -1908,6 +1908,13 @@ function exportStandalone(){
   if(start === -1){ alert('내보내기용 템플릿을 찾지 못했습니다. (단일 파일 버전에서만 동작합니다)'); return; }
   const closeIdx = html.indexOf('`;', start + marker.length);
   html = html.slice(0, start) + marker + esc + html.slice(closeIdx);
+  const prevEsc = PREV_CSV_TEXT.replace(/\\/g,'\\\\').replace(/`/g, '\\`').replace(/\$\{/g,'\\${');
+  const prevMarker = 'const EMBEDDED_PREV_CSV = `';
+  const prevStart = html.indexOf(prevMarker);
+  if(prevStart !== -1){
+     const prevCloseIdx = html.indexOf('`;', prevStart + prevMarker.length);
+     html = html.slice(0, prevStart) + prevMarker + prevEsc + html.slice(prevCloseIdx);
+  }
 
   const today = new Date();
   const dateLabel = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -1948,6 +1955,12 @@ function exportTeamHTML(){
    const lines = [header.join(',')];
    rows.forEach(r => { lines.push(header.map(h => escCell(r[h])).join(',')); });
    const csvText = '\uFEFF' + lines.join('\r\n');
+   let prevRowsFiltered = PREV_RAW_ROWS.filter(r => r['구분'] !== EXCLUDE_WORKTYPE && !EXEC_RANKS.includes(r['직급']));
+   if(site !== 'all') prevRowsFiltered = prevRowsFiltered.filter(r => r['사업장'] === site);
+   if(team !== 'all') prevRowsFiltered = prevRowsFiltered.filter(r => r['부서명'] === team);
+   const prevCsvText = prevRowsFiltered.length
+      ? '\uFEFF' + [header.join(',')].concat(prevRowsFiltered.map(r => header.map(h => escCell(r[h])).join(','))).join('\r\n')
+      : '';
 
    // 완성 파일로 저장(exportStandalone)과 동일한 방식으로 현재 화면 전체를 복제해 
    // EMBEDDED_SAMPLE_CSV 부분만 필터링된 데이터로 교체합니다. 
@@ -1959,6 +1972,13 @@ function exportTeamHTML(){
    if(start === -1){ alert('내보내기용 템플릿을 찾지 못했습니다.'); return; }
    const closeIdx = html.indexOf('`;', start + marker.length);
    html = html.slice(0, start) + marker + esc + html.slice(closeIdx);
+   const prevEsc = prevCsvText.replace(/\\/g,'\\\\').replace(/`/g, '\\`').replace(/\$\{/g,'\\${');
+   const prevMarker = 'const EMBEDDED_PREV_CSV = `';
+   const prevStart = html.indexOf('`;', prevStart + prevMarker.length);
+   if(prevStart !== -1){
+      const prevCloseIdx = html.indexOf('`;', prevStart + prevMarker.length);
+      html = html.slice(0, prevStart) + prevMarker + prevEsc + html.slice(prevCloseIdx);
+   }
 
    const today = new Date();
    const dateLabel = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -2061,7 +2081,10 @@ function resetDisplay(){
 }
 
 function init(){
-  loadFromText(EMBEDDED_SAMPLE_CSV, '샘플 데이터 표시 중 (내장) · 실제 데이터는 CSV 불러오기로 교체하세요');
+  loadFromText(EMBEDDED_SAMPLE_CSV, '샘플 데이터 표시 중 / 실제 데이터는 CSV 불러오기로 교체하세요');
+  if(EMBEDDED_PREV_CSV){
+     if(applyPrevCsvText(EMBEDDED_PREV_CSV, '저장된 전월 비교 데이터')) render();
+  }
 }
 
 document.getElementById('loadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
