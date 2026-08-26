@@ -2153,7 +2153,7 @@ document.getElementById('prevFileInput').addEventListener('change', (e) => {
          return;
       }
       let text;
-      if(bytes[0] === 0xFF && bytes[1] === 0xFE{ text = new TextDecoder('utf-16le').decode(buf); }
+      if(bytes[0] === 0xFF && bytes[1] === 0xFE){ text = new TextDecoder('utf-16le').decode(buf); }
       else if(bytes[0] === 0xFE && bytes[1] === 0xFF){ text = new TextDecoder('utf-16be').decode(buf); }
       else {
          try{ text = new TextDecoder('utf-8', { fatal:true }).decode(buf); }
