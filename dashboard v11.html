@@ -1862,6 +1862,7 @@ const EXEC_RANKS = ['상무','전무','부사장','전문위원'];
 const EXCLUDE_WORKTYPE = '근태예외자';
 const WEEKDAY_COLS = ['월','화','수','목','금'];
 const DEFAULT_CSV = 'data/timesheet_sample.csv';
+const EMBEDDED_PREV_CSV = ``;
 
 let RAW_ROWS = [];
 let PREV_RAW_ROWS = [];
@@ -1903,7 +1904,6 @@ function exportStandalone(){
   let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
   const marker = 'const EMBEDDED_SAMPLE_CSV = `';
-  const EMBEDDED_PREV_CSV = ``;
   const start = html.indexOf(marker);
   if(start === -1){ alert('내보내기용 템플릿을 찾지 못했습니다. (단일 파일 버전에서만 동작합니다)'); return; }
   const closeIdx = html.indexOf('`;', start + marker.length);
