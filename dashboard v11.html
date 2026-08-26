@@ -2280,8 +2280,19 @@ function computeEmployeeDetail(empId){
 
   const recentWeeks = weekKeysAll.slice(-6).map(wk => ({ week:wk, q:weekMap[wk] }));
 
-  return { name:last['이름'], team:last['부서명'], rank:last['직급'], monthAvg, deptAvg, orgAvg, streak, recentWeeks };
-}
+  let prevMonthAvg = null;
+  if(PREV_RAW_ROWS.length){
+     const prevBaseRows = PREV_RAW_ROWS.filter(r =>
+        r['구분'] !== EXCLUDE_WORKTYPE && !EXEC_RANKS.includes(r['직급'])
+        && numH(r['주확정근무시간']) > 0
+     );
+     const prevEmpRows = prevBaseRows.filter(r => r['사번'] === empId);
+     if(prevEmpRows.length){
+        prevMonthAvg = prevEmpRows.reduce((s,r)=>s+numH(r['주확정근무시간']),0)prevEmpRows.length;
+     }
+  }
+
+ return { name:last['이름'], team:last['부서명'], rank:last['직급'], monthAvg, deptAvg, orgAvg, streak, recentWeeks, prevMonthAvg };
 
 function renderEmployeeCard(detail){
   const el = document.getElementById('empSearchResult');
@@ -2289,12 +2300,11 @@ function renderEmployeeCard(detail){
   const diffDept = detail.monthAvg - detail.deptAvg;
   const diffOrg = detail.monthAvg - detail.orgAvg;
   const tagClass = (n) => n>=4 ? 'w4' : n>=3 ? 'w3' : 'w2';
-  const weeksHtml = detail.recentWeeks.map(w => {
-    const [yyyymm, wn] = w.week.split('-');
-    const mm = yyyymm.slice(4,6);
-    const over = w.q >= 52;
-    return `<div class="emp-week-col"><span class="emp-week-val"${over ? ' style="color:var(--coral);"' : ''}>${fmt1(w.q)}</span><span class="emp-week-label">${mm}/${parseInt(wn,10)}주</span></div>`;
-  }).join('');
+  const prevAvgtml = (() => {
+     if(detail.prevMonthAvg === null) return '';
+     const diff = Number(fmt1(detail.monthAvg - detail.prevMonthAvg));
+     const arrow = diff > 0 ?
+
   el.innerHTML = `
     <div class="emp-card">
       <div class="emp-card-head">
