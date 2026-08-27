@@ -2303,7 +2303,10 @@ function renderEmployeeCard(detail){
   const prevAvgtml = (() => {
      if(detail.prevMonthAvg === null) return '';
      const diff = Number(fmt1(detail.monthAvg - detail.prevMonthAvg));
-     const arrow = diff > 0 ?
+     const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '-';
+     const color = diff > 0 ? 'var(--coral)' : diff < 0 ? 'var(--skyblue)' : 'var(--muted)';
+     return `<div class="emp-avg-item"><span class="emp-avg-label">전월 평균</span><span class="emp-avg-val">${fmt1(detail.prevMonthAvg)}시간 <span style="font-size:11px;font-weight:700;color:${color};">${arrow}${Math.abs(diff).toFixed(1)}</span></span></div>`;
+  })();     
 
   el.innerHTML = `
     <div class="emp-card">
@@ -2316,6 +2319,7 @@ function renderEmployeeCard(detail){
       </div>
       <div class="emp-avg-row">
         <div class="emp-avg-item"><span class="emp-avg-label">이번 달 평균</span><span class="emp-avg-val">${fmt1(detail.monthAvg)}시간</span></div>
+        ${prevAvgHtml}
         <div class="emp-avg-item"><span class="emp-avg-label">부서 평균 대비</span><span class="emp-avg-val" style="color:${diffDept>=0?'var(--coral)':'var(--skyblue)'}">${diffDept>=0?'+':''}${fmt1(diffDept)}</span></div>
         <div class="emp-avg-item"><span class="emp-avg-label">사업부 평균 대비</span><span class="emp-avg-val" style="color:${diffOrg>=0?'var(--coral)':'var(--skyblue)'}">${diffOrg>=0?'+':''}${fmt1(diffOrg)}</span></div>
       </div>
