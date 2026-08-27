@@ -2288,7 +2288,7 @@ function computeEmployeeDetail(empId){
      );
      const prevEmpRows = prevBaseRows.filter(r => r['사번'] === empId);
      if(prevEmpRows.length){
-        prevMonthAvg = prevEmpRows.reduce((s,r)=>s+numH(r['주확정근무시간']),0)prevEmpRows.length;
+        prevMonthAvg = prevEmpRows.reduce((s,r)=>s+numH(r['주확정근무시간']),0)/prevEmpRows.length;
      }
   }
 
