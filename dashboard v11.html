@@ -2293,14 +2293,15 @@ function computeEmployeeDetail(empId){
   }
 
  return { name:last['이름'], team:last['부서명'], rank:last['직급'], monthAvg, deptAvg, orgAvg, streak, recentWeeks, prevMonthAvg };
-
+}
+   
 function renderEmployeeCard(detail){
   const el = document.getElementById('empSearchResult');
   if(!detail){ el.innerHTML = '<p class="footer-note">검색 결과가 없습니다.</p>'; return; }
   const diffDept = detail.monthAvg - detail.deptAvg;
   const diffOrg = detail.monthAvg - detail.orgAvg;
   const tagClass = (n) => n>=4 ? 'w4' : n>=3 ? 'w3' : 'w2';
-  const prevAvgtml = (() => {
+  const prevAvgHtml = (() => {
      if(detail.prevMonthAvg === null) return '';
      const diff = Number(fmt1(detail.monthAvg - detail.prevMonthAvg));
      const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '-';
