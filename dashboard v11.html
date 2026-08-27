@@ -2309,6 +2309,13 @@ function renderEmployeeCard(detail){
      return `<div class="emp-avg-item"><span class="emp-avg-label">전월 평균</span><span class="emp-avg-val">${fmt1(detail.prevMonthAvg)}시간 <span style="font-size:11px;font-weight:700;color:${color};">${arrow}${Math.abs(diff).toFixed(1)}</span></span></div>`;
   })();     
 
+  const weeksHtml = detail.recentWeeks.map(w => {
+     const wn = w.week.slice(-2) + '주차';
+     const color = (w.q !== undefined && w.q !== null) ? colorForHourStep(w.q) : 'var(--muted)';
+     const val = (w.q !== undefined && w.q !== null) ? fmt1(w.q) : '-';
+     return `<div class="emp-week-col"><span class="emp-week-val" style="color:${color}">${val}</span><span class="emp-week-label">${wn}</span></div>`;
+  }).join('');
+   
   el.innerHTML = `
     <div class="emp-card">
       <div class="emp-card-head">
