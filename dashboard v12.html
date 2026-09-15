@@ -2082,6 +2082,13 @@ function resetDisplay(){
 
 function init(){
   loadFromText(EMBEDDED_SAMPLE_CSV, '샘플 데이터 표시 중 / 실제 데이터는 CSV 불러오기로 교체하세요');
+  // "현재 선택 필터 내용 저장"으로 내보낸 파일은 CSV 자체가 특정 사업장/부서로만 
+  // 필터링되어 있음. buildFilterOptions()가 드롭다운을 새로 그리면서 선택 상태가 
+  // 초기화(전체)되어 버리므로, 목록에 값이 하나뿐이면 그 값을 자동 선택해
+  // 저장 당시의 필터가 그대로 유지되게 한다.
+  if(SITE_LIST.length === 1) document.getElementById('siteFilter').value = SITE_LIST[0];
+  if(TEAM_LIST.length === 1) document.getElementById('teamFilter').value = TEAM_LIST[0];
+  if(SITE_LIST.length === 1 || TEAM_LIST.length === 1) render();
   if(EMBEDDED_PREV_CSV){
      if(applyPrevCsvText(EMBEDDED_PREV_CSV, '저장된 전월 비교 데이터')) render();
   }
